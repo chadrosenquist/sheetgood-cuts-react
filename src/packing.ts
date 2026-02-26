@@ -136,16 +136,36 @@ export function optimizePlacement(boards: Board[]): OptimizationResult {
   });
 
   const sheets: SheetLayout[] = [];
+  const unplaced: Board[] = [];
   let currentSheet = new Sheet(SHEET_LENGTH, SHEET_WIDTH);
   const placedBoards: PlacedBoard[] = [];
 
   for (const { board } of allBoards) {
-    const result = currentSheet.placeBoard(
+    let result = currentSheet.placeBoard(
       board.length,
       board.width,
       !!board.rotationAllowed
     );
-    
+
+    if (!result) {
+      // try a fresh sheet
+      if (placedBoards.length > 0) {
+        sheets.push({
+          boards: placedBoards.slice(),
+          waste: currentSheet.calculateWaste(),
+        });
+      }
+
+      currentSheet = new Sheet(SHEET_LENGTH, SHEET_WIDTH);
+      placedBoards.length = 0;
+
+      result = currentSheet.placeBoard(
+        board.length,
+        board.width,
+        !!board.rotationAllowed
+      );
+    }
+
     if (result) {
       placedBoards.push({
         board,
@@ -154,31 +174,8 @@ export function optimizePlacement(boards: Board[]): OptimizationResult {
         rotated: result.rotated,
       });
     } else {
-      // Current sheet is full, start a new sheet
-      if (placedBoards.length > 0) {
-        sheets.push({
-          boards: placedBoards.slice(),
-          waste: currentSheet.calculateWaste(),
-        });
-      }
-      
-      currentSheet = new Sheet(SHEET_LENGTH, SHEET_WIDTH);
-      placedBoards.length = 0;
-      
-      // Try to place on the new sheet
-      const newResult = currentSheet.placeBoard(
-        board.length,
-        board.width,
-        !!board.rotationAllowed
-      );
-      if (newResult) {
-        placedBoards.push({
-          board,
-          x: newResult.position.x,
-          y: newResult.position.y,
-          rotated: newResult.rotated,
-        });
-      }
+      // couldn't place even on an empty sheet -> too big
+      unplaced.push(board);
     }
   }
 
@@ -200,5 +197,6 @@ export function optimizePlacement(boards: Board[]): OptimizationResult {
     totalBoardsPlaced,
     totalWaste,
     boardsPerSheet,
+    unplaced,
   };
 }

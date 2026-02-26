@@ -33,6 +33,8 @@ export interface OptimizationResult {
   totalBoardsPlaced: number;
   totalWaste: number;
   boardsPerSheet: number[];
+  /** Boards that couldn’t be placed on any sheet (too large) */
+  unplaced: Board[];
 }
 
 // Dimensions in inches

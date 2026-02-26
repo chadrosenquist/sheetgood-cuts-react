@@ -156,6 +156,22 @@ function App() {
                     ))}
                   </div>
                 </div>
+
+                {/* Unplaced Boards (too large to fit) */}
+                {result.unplaced && result.unplaced.length > 0 && (
+                  <div className="unplaced-list">
+                    <h2>Unplaced Boards</h2>
+                    <p className="warning">The following pieces could not fit on any sheet:</p>
+                    <ul>
+                      {result.unplaced.map((b, idx) => (
+                        <li key={idx}>
+                          {b.name || 'Board'} – {b.length}" × {b.width}" (quantity 1)
+                          {!b.rotationAllowed && ' (rotation forbidden)'}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </>
             ) : (
               <div className="no-results">

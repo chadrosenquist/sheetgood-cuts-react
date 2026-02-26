@@ -300,6 +300,12 @@ body {
   color: #666;
 }
 
+.cut-dims .no-rotate {
+  color: #c0392b;
+  font-style: italic;
+  margin-left: 4px;
+}
+
 .cut-pos {
   color: #999;
   font-size: 12px;

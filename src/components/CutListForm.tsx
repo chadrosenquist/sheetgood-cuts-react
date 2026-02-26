@@ -8,8 +8,24 @@ interface CutListFormProps {
 
 export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => {
   const [boards, setBoards] = useState<Board[]>([
-    { id: '1', length: 24, width: 12, depth: 1, quantity: 4, name: 'Side Panels' },
-    { id: '2', length: 48, width: 12, depth: 1, quantity: 2, name: 'Top/Bottom' },
+    {
+      id: '1',
+      length: 24,
+      width: 12,
+      depth: 1,
+      quantity: 4,
+      name: 'Side Panels',
+      rotationAllowed: false,
+    },
+    {
+      id: '2',
+      length: 48,
+      width: 12,
+      depth: 1,
+      quantity: 2,
+      name: 'Top/Bottom',
+      rotationAllowed: false,
+    },
   ]);
 
   const [formData, setFormData] = useState({
@@ -18,6 +34,7 @@ export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => 
     width: '',
     depth: '',
     quantity: '',
+    rotationAllowed: false,
   });
 
   const handleAddBoard = (e: React.FormEvent) => {
@@ -35,12 +52,13 @@ export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => 
       depth: parseFloat(formData.depth) || 1,
       quantity: parseInt(formData.quantity),
       name: formData.name || `Board ${boards.length + 1}`,
+      rotationAllowed: !!formData.rotationAllowed,
     };
 
     const updatedBoards = [...boards, newBoard];
     setBoards(updatedBoards);
     onBoardsUpdated(updatedBoards);
-    setFormData({ name: '', length: '', width: '', depth: '', quantity: '' });
+    setFormData({ name: '', length: '', width: '', depth: '', quantity: '', rotationAllowed: false });
   };
 
   const handleRemoveBoard = (id: string) => {
@@ -102,6 +120,14 @@ export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => 
             min="1"
             required
           />
+          <label className="rotate-checkbox">
+            <input
+              type="checkbox"
+              checked={formData.rotationAllowed}
+              onChange={(e) => setFormData({ ...formData, rotationAllowed: e.target.checked })}
+            />
+            Allow Rotation
+          </label>
           <button type="submit" className="btn-add">Add</button>
         </div>
       </form>
@@ -115,6 +141,7 @@ export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => 
               <th>Width (in)</th>
               <th>Depth (in)</th>
               <th>Qty</th>
+              <th>Rotate?</th>
               <th>Total Area (sq in)</th>
               <th>Action</th>
             </tr>
@@ -161,6 +188,13 @@ export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => 
                     onChange={(e) => handleUpdateBoard(board.id, 'quantity', parseInt(e.target.value))}
                     className="inline-input"
                     min="1"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={!!board.rotationAllowed}
+                    onChange={(e) => handleUpdateBoard(board.id, 'rotationAllowed', e.target.checked)}
                   />
                 </td>
                 <td>{(board.length * board.width * board.quantity).toFixed(0)}</td>

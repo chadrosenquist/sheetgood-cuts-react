@@ -27,6 +27,12 @@
   align-items: flex-end;
 }
 
+.rotate-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+}
 .form-input {
   flex: 1;
   min-width: 100px;

@@ -19,11 +19,11 @@ class Sheet {
     this.height = height;
   }
 
-  canPlace(boardLength: number, boardWidth: number): boolean {
+  canPlace(boardLength: number, boardWidth: number, rotationAllowed: boolean = true): boolean {
     // Try without rotation
     if (this.findSpace(boardLength, boardWidth)) return true;
-    // Try with rotation
-    if (this.findSpace(boardWidth, boardLength)) return true;
+    // Try with rotation if permitted
+    if (rotationAllowed && this.findSpace(boardWidth, boardLength)) return true;
     return false;
   }
 
@@ -82,7 +82,17 @@ class Sheet {
     return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
   }
 
-  placeBoard(boardLength: number, boardWidth: number): { position: Rect; rotated: boolean } | null {
+  /**
+   * Attempt to place a board on the sheet.
+   * @param boardLength length of the board (in inches)
+   * @param boardWidth width of the board (in inches)
+   * @param rotationAllowed if true, the board may be rotated 90°
+   */
+  placeBoard(
+    boardLength: number,
+    boardWidth: number,
+    rotationAllowed: boolean
+  ): { position: Rect; rotated: boolean } | null {
     // Try without rotation first
     let space = this.findSpace(boardLength, boardWidth);
     if (space) {
@@ -90,11 +100,13 @@ class Sheet {
       return { position: space, rotated: false };
     }
 
-    // Try with rotation
-    space = this.findSpace(boardWidth, boardLength);
-    if (space) {
-      this.usedRects.push(space);
-      return { position: space, rotated: true };
+    if (rotationAllowed) {
+      // Try with rotation only if allowed
+      space = this.findSpace(boardWidth, boardLength);
+      if (space) {
+        this.usedRects.push(space);
+        return { position: space, rotated: true };
+      }
     }
 
     return null;
@@ -128,7 +140,11 @@ export function optimizePlacement(boards: Board[]): OptimizationResult {
   const placedBoards: PlacedBoard[] = [];
 
   for (const { board } of allBoards) {
-    const result = currentSheet.placeBoard(board.length, board.width);
+    const result = currentSheet.placeBoard(
+      board.length,
+      board.width,
+      !!board.rotationAllowed
+    );
     
     if (result) {
       placedBoards.push({
@@ -150,7 +166,11 @@ export function optimizePlacement(boards: Board[]): OptimizationResult {
       placedBoards.length = 0;
       
       // Try to place on the new sheet
-      const newResult = currentSheet.placeBoard(board.length, board.width);
+      const newResult = currentSheet.placeBoard(
+        board.length,
+        board.width,
+        !!board.rotationAllowed
+      );
       if (newResult) {
         placedBoards.push({
           board,

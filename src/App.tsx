@@ -7,8 +7,24 @@ import './App.css';
 
 function App() {
   const [boards, setBoards] = useState<Board[]>([
-    { id: '1', length: 24, width: 12, depth: 1, quantity: 4, name: 'Side Panels' },
-    { id: '2', length: 48, width: 12, depth: 1, quantity: 2, name: 'Top/Bottom' },
+    {
+      id: '1',
+      length: 24,
+      width: 12,
+      depth: 1,
+      quantity: 4,
+      name: 'Side Panels',
+      rotationAllowed: false,
+    },
+    {
+      id: '2',
+      length: 48,
+      width: 12,
+      depth: 1,
+      quantity: 2,
+      name: 'Top/Bottom',
+      rotationAllowed: false,
+    },
   ]);
 
   const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
@@ -131,6 +147,9 @@ function App() {
                         <span className="cut-dims">
                           {pb.rotated ? pb.board.width : pb.board.length}" × {pb.rotated ? pb.board.length : pb.board.width}" 
                           {pb.rotated && ' (rotated)'}
+                          {!pb.board.rotationAllowed && !pb.rotated && (
+                            <span className="no-rotate"> (no rotate)</span>
+                          )}
                         </span>
                         <span className="cut-pos">Position: ({pb.x.toFixed(1)}", {pb.y.toFixed(1)}")</span>
                       </div>

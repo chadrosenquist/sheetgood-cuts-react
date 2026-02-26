@@ -160,6 +160,17 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
                   </text>
                 </>
               )}
+              {/* Lock indicator when rotation is forbidden */}
+              {!pb.board.rotationAllowed && (
+                <text
+                  x={x + 2}
+                  y={y + 10}
+                  fontSize="8"
+                  fill="#000"
+                >
+                  🔒
+                </text>
+              )}
             </g>
           );
         })}

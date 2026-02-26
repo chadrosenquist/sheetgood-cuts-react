@@ -6,6 +6,11 @@ export interface Board {
   depth: number;   // in inches
   quantity: number;
   name?: string;
+  /**
+   * Whether the piece may be rotated 90° during packing
+   * (important for veneered or grained material). Defaults to false.
+   */
+  rotationAllowed?: boolean;
 }
 
 // Placed board on a sheet

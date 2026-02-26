@@ -1,0 +1,68 @@
+.sheet-viz {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.sheet-viz h3 {
+  margin-top: 0;
+  color: #333;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.viz-info {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+
+.viz-info span {
+  background: #f0f0f0;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.sheet-canvas {
+  display: block;
+  margin: 10px auto;
+  width: auto;
+  max-width: 100%;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  overflow: auto;
+}
+
+.legend {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+.legend h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.legend-color {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #333;
+  border-radius: 2px;
+  opacity: 0.8;
+}

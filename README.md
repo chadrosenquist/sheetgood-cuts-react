@@ -12,6 +12,7 @@ A React application for optimizing plywood cutting layouts. SheetGood Cuts helps
 - **Cost Estimation**: Quick material cost calculation based on sheet count
 - **Sheet Navigation**: View each sheet individually and see detailed breaking down of piece placement
 - **Print-Friendly**: Get a detailed cut summary for each sheet with precise dimensions and positions
+- **Configurable Sheet Size**: Set the plywood sheet dimensions (default 48"×96") before optimization
 
 ## Getting Started
 
@@ -103,7 +104,7 @@ src/
 ├── components/
 │   ├── CutListForm.tsx     # Form for managing cut list
 │   ├── CutListForm.css     # Cut list form styling
-│   ├── SheetVisualization.tsx   # Sheet visualization component
+│   ├── SheetVisualization.tsx   # Sheet visualization component (now accepts custom sheet size)
 │   └── SheetVisualization.css   # Visualization styling
 ├── index.css               # Global styles
 └── main.tsx                # Application entry point

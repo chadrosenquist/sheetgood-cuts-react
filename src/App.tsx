@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { Board, OptimizationResult } from './types';
 import { optimizePlacement } from './packing';
 import { CutListForm } from './components/CutListForm';
@@ -29,10 +29,14 @@ function App() {
 
   const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
 
+  // sheet dimensions (in inches)
+  const [sheetLength, setSheetLength] = useState<number>(96);
+  const [sheetWidth, setSheetWidth] = useState<number>(48);
+
   const result: OptimizationResult | null = useMemo(() => {
     if (boards.length === 0) return null;
-    return optimizePlacement(boards);
-  }, [boards]);
+    return optimizePlacement(boards, sheetLength, sheetWidth);
+  }, [boards, sheetLength, sheetWidth]);
 
   const handleBoardsUpdated = (updatedBoards: Board[]) => {
     setBoards(updatedBoards);
@@ -41,7 +45,7 @@ function App() {
 
   const totalArea = boards.reduce((sum, b) => sum + b.length * b.width * b.quantity, 0);
   const requiredSheets = result ? result.sheets.length : 0;
-  const sheetArea = 96 * 48; // 4608 square inches
+  const sheetArea = sheetLength * sheetWidth;
 
   return (
     <div className="app">
@@ -54,7 +58,30 @@ function App() {
         <div className="container">
           {/* Left Column - Input */}
           <div className="left-column">
-            <CutListForm onBoardsUpdated={handleBoardsUpdated} />
+            <div className="sheet-size-form">
+              <h2>Sheet Size (inches)</h2>
+              <div className="sheet-size-row">
+                <label>
+                  Length:
+                  <input
+                    type="number"
+                    value={sheetLength}
+                    onChange={(e) => setSheetLength(parseFloat(e.target.value) || 0)}
+                    min="1"
+                  />
+                </label>
+                <label>
+                  Width:
+                  <input
+                    type="number"
+                    value={sheetWidth}
+                    onChange={(e) => setSheetWidth(parseFloat(e.target.value) || 0)}
+                    min="1"
+                  />
+                </label>
+              </div>
+              <CutListForm onBoardsUpdated={handleBoardsUpdated} />
+            </div>
           </div>
 
           {/* Right Column - Results */}
@@ -80,7 +107,7 @@ function App() {
                     <div className="stat-card">
                       <div className="stat-value">${(result.sheets.length * 45).toFixed(2)}</div>
                       <div className="stat-label">Material Cost*</div>
-                      <small>*at $45/sheet</small>
+                      <small>*at $45/sheet ({sheetWidth}"×{sheetLength}")</small>
                     </div>
                   </div>
                 </div>
@@ -112,6 +139,8 @@ function App() {
                 <SheetVisualization
                   sheets={result.sheets}
                   sheetIndex={currentSheetIndex}
+                  sheetLength={sheetLength}
+                  sheetWidth={sheetWidth}
                 />
 
                 {/* Detailed Breakdown */}
@@ -127,10 +156,10 @@ function App() {
                         <div className="breakdown-header">Sheet {idx + 1}</div>
                         <div className="breakdown-content">
                           <div>{sheet.boards.length} pieces</div>
-                          <div>{((sheet.waste / 4608) * 100).toFixed(1)}% waste</div>
+                          <div>{((sheet.waste / sheetArea) * 100).toFixed(1)}% waste</div>
                         </div>
                         <div className="breakdown-efficiency">
-                          {(((4608 - sheet.waste) / 4608) * 100).toFixed(0)}% used
+                          {(((sheetArea - sheet.waste) / sheetArea) * 100).toFixed(0)}% used
                         </div>
                       </div>
                     ))}

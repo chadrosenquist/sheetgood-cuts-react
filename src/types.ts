@@ -37,6 +37,14 @@ export interface OptimizationResult {
   unplaced: Board[];
 }
 
-// Dimensions in inches
+// Dimensions in inches (defaults)
 export const SHEET_LENGTH = 96; // 8 feet
 export const SHEET_WIDTH = 48;  // 4 feet
+
+// helper to ensure we can fall back to defaults when sheet size not provided
+export function resolveSheetSize(length?: number, width?: number) {
+  return {
+    length: length != null ? length : SHEET_LENGTH,
+    width: width != null ? width : SHEET_WIDTH,
+  };
+}

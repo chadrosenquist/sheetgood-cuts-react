@@ -1,5 +1,5 @@
 import type { Board, PlacedBoard, SheetLayout, OptimizationResult } from './types';
-import { SHEET_LENGTH, SHEET_WIDTH } from './types';
+import { resolveSheetSize } from './types';
 
 // Simple guillotine packing algorithm for 2D bin packing
 interface Rect {
@@ -119,7 +119,13 @@ class Sheet {
 }
 
 // Optimized packing using largest-first and bottom-left heuristics
-export function optimizePlacement(boards: Board[]): OptimizationResult {
+export function optimizePlacement(
+  boards: Board[],
+  sheetLength?: number,
+  sheetWidth?: number
+): OptimizationResult {
+  const { length: useLength, width: useWidth } = resolveSheetSize(sheetLength, sheetWidth);
+
   // Create a list of individual board pieces (respecting quantity)
   const allBoards: Array<{ board: Board; originalIndex: number }> = [];
   boards.forEach((board, idx) => {
@@ -137,7 +143,7 @@ export function optimizePlacement(boards: Board[]): OptimizationResult {
 
   const sheets: SheetLayout[] = [];
   const unplaced: Board[] = [];
-  let currentSheet = new Sheet(SHEET_LENGTH, SHEET_WIDTH);
+  let currentSheet = new Sheet(useLength, useWidth);
   const placedBoards: PlacedBoard[] = [];
 
   for (const { board } of allBoards) {
@@ -156,7 +162,7 @@ export function optimizePlacement(boards: Board[]): OptimizationResult {
         });
       }
 
-      currentSheet = new Sheet(SHEET_LENGTH, SHEET_WIDTH);
+      currentSheet = new Sheet(useLength, useWidth);
       placedBoards.length = 0;
 
       result = currentSheet.placeBoard(

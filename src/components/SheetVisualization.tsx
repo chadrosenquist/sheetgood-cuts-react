@@ -6,13 +6,15 @@ import './SheetVisualization.css';
 interface SheetVisualizationProps {
   sheets: SheetLayout[];
   sheetIndex: number;
+  sheetLength?: number; // inches
+  sheetWidth?: number;  // inches
 }
 
 // scale factor for visualizing sheet; higher value makes the drawing larger
 // approximately 4 pixels per inch gives a sheet ~384px × 192px. Using 4x previous
 const SCALE = 6; // pixels per inch (increased to make canvas ~7.5x larger)
 
-export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, sheetIndex }) => {
+export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, sheetIndex, sheetLength, sheetWidth }) => {
   if (!sheets || sheets.length === 0) {
     return <div className="sheet-viz">No layout data available</div>;
   }
@@ -22,8 +24,10 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
   }
 
   const sheet = sheets[sheetIndex];
-  const canvasWidth = SHEET_LENGTH * SCALE;
-  const canvasHeight = SHEET_WIDTH * SCALE;
+  const length = sheetLength != null ? sheetLength : SHEET_LENGTH;
+  const width = sheetWidth != null ? sheetWidth : SHEET_WIDTH;
+  const canvasWidth = length * SCALE;
+  const canvasHeight = width * SCALE;
 
   // Generate colors for different boards
   const colors: { [key: string]: string } = {};
@@ -52,7 +56,7 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
         sheetNumber: i + 1,
         boardsPlaced: s.boards.length,
         waste: s.waste,
-        areaUsed: SHEET_LENGTH * SHEET_WIDTH - s.waste,
+        areaUsed: length * width - s.waste,
         boards: s.boards.map(pb => ({
           id: pb.board.id,
           name: pb.board.name,
@@ -155,9 +159,15 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
   };
 
   // Generate a simple SVG string for a given sheet (used to export all sheets)
-  const generateSVGStringForSheet = (s: typeof sheet, idx: number) => {
-    const canvasW = SHEET_LENGTH * SCALE + 20;
-    const canvasH = SHEET_WIDTH * SCALE + 20;
+  const generateSVGStringForSheet = (s: typeof sheet /*, idx: number */) => {
+    const length = sheetLength != null ? sheetLength : SHEET_LENGTH;
+    const width = sheetWidth != null ? sheetWidth : SHEET_WIDTH;
+    const canvasW = length * SCALE + 20;
+    const canvasH = width * SCALE + 20;
+
+    // simple XML escaping for text nodes
+    const escapeXml = (str: string) =>
+      str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     // colors
     const colorPalette = [
@@ -175,7 +185,7 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
       const x = pb.x * SCALE + 0;
       const y = pb.y * SCALE + 0;
       const color = colors[pb.board.id];
-      const name = (pb.board.name || 'Board').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const name = escapeXml(pb.board.name || 'Board');
       const dims = pb.rotated
         ? `${pb.board.width}\" × ${pb.board.length}\"`
         : `${pb.board.length}\" × ${pb.board.width}\"`;
@@ -195,7 +205,7 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
       return `\n    <g key=\"r${i}\">\n      <rect x=\"${x}\" y=\"${y}\" width=\"${w}\" height=\"${h}\" fill=\"${color}\" stroke=\"#000\" stroke-width=\"1\" opacity=\"0.8\"/>\n      <text x=\"${x + w / 2}\" y=\"${y + h / 2 - 6}\" text-anchor=\"middle\" font-size=\"10\" fill=\"#000\" font-weight=\"bold\">${name}</text>\n      <text x=\"${x + w / 2}\" y=\"${y + h / 2 + 9}\" text-anchor=\"middle\" font-size=\"8\" fill=\"#000\">${dims}</text>${rotationMarkup}${lockMarkup}${qtyMarkup}\n    </g>`;
     }).join('');
 
-    const svg = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg width=\"${canvasW}\" height=\"${canvasH}\" viewBox=\"-10 -10 ${canvasW} ${canvasH}\" xmlns=\"http://www.w3.org/2000/svg\">\n  <rect x=\"0\" y=\"0\" width=\"${SHEET_LENGTH * SCALE}\" height=\"${SHEET_WIDTH * SCALE}\" fill=\"#ffffff\" stroke=\"#333\" stroke-width=\"2\"/>${rects}\n</svg>`;
+    const svg = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg width=\"${canvasW}\" height=\"${canvasH}\" viewBox=\"-10 -10 ${canvasW} ${canvasH}\" xmlns=\"http://www.w3.org/2000/svg\">\n  <rect x=\"0\" y=\"0\" width=\"${length * SCALE}\" height=\"${width * SCALE}\" fill=\"#ffffff\" stroke=\"#333\" stroke-width=\"2\"/>${rects}\n</svg>`;
     return svg;
   };
 
@@ -203,14 +213,21 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
     try {
       const imgs: HTMLImageElement[] = [];
       for (let i = 0; i < sheets.length; i++) {
-        const svgStr = generateSVGStringForSheet(sheets[i], i);
-        const svg64 = btoa(unescape(encodeURIComponent(svgStr)));
-        const src = 'data:image/svg+xml;base64,' + svg64;
+        const svgStr = generateSVGStringForSheet(sheets[i]);
+        // create a blob URL to avoid data URI size issues
+        const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
         const img = await new Promise<HTMLImageElement>((res, rej) => {
           const im = new Image();
-          im.onload = () => res(im);
-          im.onerror = rej;
-          im.src = src;
+          im.onload = () => {
+            URL.revokeObjectURL(url);
+            res(im);
+          };
+          im.onerror = () => {
+            URL.revokeObjectURL(url);
+            rej(new Error(`image load failed for sheet ${i}`));
+          };
+          im.src = url;
         });
         imgs.push(img);
       }
@@ -249,7 +266,9 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
         URL.revokeObjectURL(url);
       });
     } catch (err) {
-      alert('Error exporting all sheets: ' + (err instanceof Error ? err.message : String(err)));
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('handleSaveAllPNG error', err);
+      alert('Error exporting all sheets: ' + msg);
     }
   };
 
@@ -279,8 +298,8 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
       
       <div className="viz-info">
         <span>Boards: {sheet.boards.length}</span>
-        <span>Area Used: {(SHEET_LENGTH * SHEET_WIDTH - sheet.waste).toFixed(0)} sq in</span>
-        <span>Waste: {sheet.waste.toFixed(0)} sq in ({((sheet.waste / (SHEET_LENGTH * SHEET_WIDTH)) * 100).toFixed(1)}%)</span>
+        <span>Area Used: {(length * width - sheet.waste).toFixed(0)} sq in</span>
+        <span>Waste: {sheet.waste.toFixed(0)} sq in ({((sheet.waste / (length * width)) * 100).toFixed(1)}%)</span>
       </div>
 
       <svg
@@ -303,7 +322,7 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
         />
 
         {/* Grid for reference */}
-        {Array.from({ length: Math.ceil(SHEET_LENGTH / 12) + 1 }).map((_, i) => (
+        {Array.from({ length: Math.ceil(length / 12) + 1 }).map((_, i) => (
           <line
             key={`vline-${i}`}
             x1={i * 12 * SCALE}
@@ -315,7 +334,7 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
             opacity={0.5}
           />
         ))}
-        {Array.from({ length: Math.ceil(SHEET_WIDTH / 12) + 1 }).map((_, i) => (
+        {Array.from({ length: Math.ceil(width / 12) + 1 }).map((_, i) => (
           <line
             key={`hline-${i}`}
             x1={0}
@@ -424,10 +443,10 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
 
         {/* Dimensions on axis */}
         <text x={canvasWidth / 2} y={canvasHeight + 15} textAnchor="middle" fontSize="12" fill="#666">
-          {SHEET_LENGTH}" (8')
+          {length}"
         </text>
         <text x={-15} y={canvasHeight / 2} textAnchor="middle" fontSize="12" fill="#666" transform={`rotate(-90 -15 ${canvasHeight / 2})`}>
-          {SHEET_WIDTH}" (4')
+          {width}" 
         </text>
       </svg>
 

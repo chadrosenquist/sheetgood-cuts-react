@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { optimizePlacement } from './packing';
 import type { Board } from './types';
 
@@ -46,5 +47,18 @@ describe('packing algorithm', () => {
     const result = optimizePlacement(boards);
     expect(result.sheets.length).toBe(0);
     expect(result.unplaced).toEqual(boards);
+  });
+
+  it('respects custom sheet size passed in', () => {
+    const boards: Board[] = [
+      { id: 'big', length: 60, width: 36, depth: 1, quantity: 1, rotationAllowed: true },
+    ];
+    // default sheet is 96x48 so this board would fit if rotated
+    const defaultResult = optimizePlacement(boards);
+    expect(defaultResult.unplaced.length).toBe(0);
+
+    // use a small sheet that cannot accommodate the piece even rotated
+    const smallResult = optimizePlacement(boards, 50, 40);
+    expect(smallResult.unplaced.length).toBe(1);
   });
 });

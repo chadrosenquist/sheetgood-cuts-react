@@ -79,6 +79,35 @@ body {
   flex-direction: column;
 }
 
+.sheet-size-form {
+  background: #fff;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.sheet-size-row {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.sheet-size-row label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.sheet-size-row input {
+  padding: 6px 8px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 80px;
+}
+
 .right-column {
   display: flex;
   flex-direction: column;

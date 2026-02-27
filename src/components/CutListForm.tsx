@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import type { Board } from '../types';
 import './CutListForm.css';
 
@@ -7,6 +7,7 @@ interface CutListFormProps {
 }
 
 export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [boards, setBoards] = useState<Board[]>([
     {
       id: '1',
@@ -82,16 +83,96 @@ export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => 
     }
   };
 
+  const handleSaveList = () => {
+    if (boards.length === 0) {
+      alert('No boards to save. Add some boards first.');
+      return;
+    }
+
+    const dataStr = JSON.stringify(boards, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `cut-list-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportList = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const importedBoards = JSON.parse(content);
+
+        // Validate that it's an array of boards
+        if (!Array.isArray(importedBoards)) {
+          throw new Error('Invalid file format: expected an array of boards');
+        }
+
+        // Basic validation of board structure
+        importedBoards.forEach((board: any) => {
+          if (
+            typeof board.id !== 'string' ||
+            typeof board.length !== 'number' ||
+            typeof board.width !== 'number' ||
+            typeof board.quantity !== 'number'
+          ) {
+            throw new Error('Invalid board format in file');
+          }
+        });
+
+        setBoards(importedBoards);
+        onBoardsUpdated(importedBoards);
+        alert('Cut list imported successfully!');
+      } catch (error) {
+        alert(`Error importing file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset the file input so the same file can be imported again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="cut-list-form">
       <div className="cut-list-header">
         <h2>Cut List</h2>
-        {boards.length > 0 && (
-          <button onClick={handleClearList} className="btn-clear">
-            Clear All
+        <div className="header-buttons">
+          <button onClick={handleSaveList} className="btn-save" title="Export cut list as JSON">
+            💾 Save
           </button>
-        )}
+          <button onClick={handleImportClick} className="btn-import" title="Import cut list from JSON file">
+            📂 Import
+          </button>
+          {boards.length > 0 && (
+            <button onClick={handleClearList} className="btn-clear">
+              Clear All
+            </button>
+          )}
+        </div>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleImportList}
+        style={{ display: 'none' }}
+      />
       
       <form onSubmit={handleAddBoard} className="add-board-form">
         <div className="form-row">

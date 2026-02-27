@@ -116,12 +116,19 @@
 .btn-remove:hover {
   background: #da190b;
 }
+
 .cut-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -138,4 +145,34 @@
 
 .btn-clear:hover {
   background: #e68900;
+}
+
+.btn-save {
+  padding: 8px 16px;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.btn-save:hover {
+  background: #0b7dda;
+}
+
+.btn-import {
+  padding: 8px 16px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.btn-import:hover {
+  background: #45a049;
 }

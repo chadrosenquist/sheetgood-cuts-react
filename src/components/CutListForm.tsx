@@ -75,9 +75,23 @@ export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => 
     onBoardsUpdated(updatedBoards);
   };
 
+  const handleClearList = () => {
+    if (window.confirm('Are you sure you want to clear the entire cut list?')) {
+      setBoards([]);
+      onBoardsUpdated([]);
+    }
+  };
+
   return (
     <div className="cut-list-form">
-      <h2>Cut List</h2>
+      <div className="cut-list-header">
+        <h2>Cut List</h2>
+        {boards.length > 0 && (
+          <button onClick={handleClearList} className="btn-clear">
+            Clear All
+          </button>
+        )}
+      </div>
       
       <form onSubmit={handleAddBoard} className="add-board-form">
         <div className="form-row">

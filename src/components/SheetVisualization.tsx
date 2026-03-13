@@ -47,6 +47,32 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [scaleMultiplier, setScaleMultiplier] = useState<number>(1);
 
+  const isValidFileName = (name: string) => {
+    // Disallow reserved file name characters on Windows/macOS/Linux
+    // and control characters (0-31)
+    return !/[<>:"/\\|?*\x00-\x1F]/.test(name);
+  };
+
+  const promptForFileName = (defaultName: string, extension: string) => {
+    const invalidChars = '<>:\"/\\|?*';
+    let fileNameInput = window.prompt('Enter a filename to save as:', defaultName);
+    while (fileNameInput != null) {
+      const fileName = (fileNameInput.trim() || defaultName).toLowerCase();
+      const fileNameWithExt = fileName.endsWith(`.${extension}`) ? fileName : `${fileName}.${extension}`;
+      const baseName = fileNameWithExt.replace(new RegExp(`\\.${extension}$`), '');
+
+      if (isValidFileName(baseName)) {
+        return fileNameWithExt;
+      }
+
+      alert(
+        `Filename contains invalid characters. Avoid: ${invalidChars}`
+      );
+      fileNameInput = window.prompt('Enter a filename to save as:', fileNameWithExt);
+    }
+    return null;
+  };
+
   const handleSaveSummary = () => {
     const summary = {
       generatedAt: new Date().toISOString(),
@@ -73,9 +99,15 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
     const dataStr = JSON.stringify(summary, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
+    const fileName = promptForFileName(
+      `cut-summary-sheet-${sheetIndex + 1}-${new Date().toISOString().split('T')[0]}`,
+      'json'
+    );
+    if (!fileName) return;
+
     const a = document.createElement('a');
     a.href = url;
-    a.download = `cut-summary-sheet-${sheetIndex + 1}-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -101,9 +133,15 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
 
     const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
+    const fileName = promptForFileName(
+      `sheet-${sheetIndex + 1}-${new Date().toISOString().split('T')[0]}`,
+      'svg'
+    );
+    if (!fileName) return;
+
     const a = document.createElement('a');
     a.href = url;
-    a.download = `sheet-${sheetIndex + 1}-${new Date().toISOString().split('T')[0]}.svg`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -127,6 +165,12 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
     const imgSrc = 'data:image/svg+xml;base64,' + svg64;
 
     const img = new Image();
+    const fileName = promptForFileName(
+      `sheet-${sheetIndex + 1}-${new Date().toISOString().split('T')[0]}`,
+      'png'
+    );
+    if (!fileName) return;
+
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = Math.round(svg.clientWidth * scaleMultiplier);
@@ -147,7 +191,7 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `sheet-${sheetIndex + 1}-${new Date().toISOString().split('T')[0]}.png`;
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -254,12 +298,18 @@ export const SheetVisualization: React.FC<SheetVisualizationProps> = ({ sheets, 
         y += ih + 20; // spacing
       }
 
+      const fileName = promptForFileName(
+        `all-sheets-${new Date().toISOString().split('T')[0]}`,
+        'png'
+      );
+      if (!fileName) return;
+
       canvas.toBlob((blob) => {
         if (!blob) { alert('Failed to create combined PNG'); return; }
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `all-sheets-${new Date().toISOString().split('T')[0]}.png`;
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

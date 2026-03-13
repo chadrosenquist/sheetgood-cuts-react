@@ -83,6 +83,29 @@ export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => 
     }
   };
 
+  const isValidFileName = (name: string) => {
+    // Disallow reserved file name characters on Windows/macOS/Linux and control characters
+    return !/[<>:"/\\|?*\x00-\x1F]/.test(name);
+  };
+
+  const promptForFileName = (defaultName: string, extension: string) => {
+    const invalidChars = '<>:\"/\\|?*';
+    let fileNameInput = window.prompt('Enter a filename to save your cut list as:', defaultName);
+    while (fileNameInput != null) {
+      const fileName = (fileNameInput.trim() || defaultName).toLowerCase();
+      const fileNameWithExt = fileName.endsWith(`.${extension}`) ? fileName : `${fileName}.${extension}`;
+      const baseName = fileNameWithExt.replace(new RegExp(`\\.${extension}$`), '');
+
+      if (isValidFileName(baseName)) {
+        return fileNameWithExt;
+      }
+
+      alert(`Filename contains invalid characters. Avoid: ${invalidChars}`);
+      fileNameInput = window.prompt('Enter a filename to save your cut list as:', fileNameWithExt);
+    }
+    return null;
+  };
+
   const handleSaveList = () => {
     if (boards.length === 0) {
       alert('No boards to save. Add some boards first.');
@@ -90,14 +113,11 @@ export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => 
     }
 
     const defaultFileName = `cut-list-${new Date().toISOString().split('T')[0]}.json`;
-    const fileNameInput = window.prompt('Enter a filename to save your cut list as:', defaultFileName);
-    if (!fileNameInput) {
+    const fileNameWithExt = promptForFileName(defaultFileName, 'json');
+    if (!fileNameWithExt) {
       // User cancelled the save dialog
       return;
     }
-
-    const fileName = fileNameInput.trim() || defaultFileName;
-    const fileNameWithExt = fileName.toLowerCase().endsWith('.json') ? fileName : `${fileName}.json`;
 
     const dataStr = JSON.stringify(boards, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });

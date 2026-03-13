@@ -89,12 +89,22 @@ export const CutListForm: React.FC<CutListFormProps> = ({ onBoardsUpdated }) => 
       return;
     }
 
+    const defaultFileName = `cut-list-${new Date().toISOString().split('T')[0]}.json`;
+    const fileNameInput = window.prompt('Enter a filename to save your cut list as:', defaultFileName);
+    if (!fileNameInput) {
+      // User cancelled the save dialog
+      return;
+    }
+
+    const fileName = fileNameInput.trim() || defaultFileName;
+    const fileNameWithExt = fileName.toLowerCase().endsWith('.json') ? fileName : `${fileName}.json`;
+
     const dataStr = JSON.stringify(boards, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `cut-list-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = fileNameWithExt;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
